@@ -1,7 +1,6 @@
 // Anonymous files retain complete Trash reviews without retaining every descendant in memory.
 use std::fs::{File, OpenOptions};
 use std::os::unix::fs::{FileExt, OpenOptionsExt};
-use std::os::unix::io::AsRawFd;
 use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -39,6 +38,20 @@ pub struct Manifest {
     file: Arc<File>,
     end: u64,
 }
+impl std::ops::Drop for Manifest {
+    fn drop(&mut self) {
+        // Explicitly release the flock lock before closing the fd. The kernel
+        // does not guarantee that closing a dup's the same fd releases the lock
+        // in any particular order relative to the close completing, so we must
+        // LOCK_UN explicitly to close the race window.
+        //
+        // Only unlock if this is the last strong reference — if other Arc clones
+        // exist, they still hold the lock.
+        if Arc::strong_count(&self.file) == 1 {
+            let _ = self.file.unlock();
+        }
+    }
+}
 #[derive(Clone, Debug)]
 pub struct Records {
     file: Arc<File>,
@@ -54,11 +67,8 @@ impl Manifest {
         Ok(Self { file: Arc::new(file), end: 0 })
     }
     pub fn open_inactive(path: &Path) -> Result<Option<Self>, String> {
-        let file = crate::backend::regfile::open_if_regular(path, crate::oflags::O_NOFOLLOW)
+        let file = OpenOptions::new().read(true).write(true).custom_flags(crate::oflags::O_NOFOLLOW).open(path)
             .map_err(|e| format!("Could not open recovery record {}: {}", path.display(), e))?;
-        // Reopen the verified inode, so replay can append its durable completion marker without a path race.
-        let file = OpenOptions::new().read(true).write(true).open(format!("/proc/self/fd/{}", file.as_raw_fd()))
-            .map_err(|e| format!("Could not reopen recovery record for completion: {}", e))?;
         match file.try_lock() {
             Ok(()) => {}
             Err(std::fs::TryLockError::WouldBlock) => return Ok(None),
