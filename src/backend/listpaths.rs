@@ -1,6 +1,6 @@
 use crate::backend::fsinfo::dev_of;
 use crate::backend::listing::Listing;
-use crate::backend::proto::listed_line;
+use crate::backend::proto::listed_for_path;
 use crate::backend::run::{forget_rows, write_window};
 use crate::backend::searchreq::finish_search;
 use crate::backend::state::{State, Tables};
@@ -58,7 +58,7 @@ pub fn answer(
     st.listing = l;
     forget_rows(st, pool);
     // The sort figure is always zero: nothing here is sorted, see docs/protocol.md "listpaths".
-    writeln!(out, "{}", listed_line(st.listing.len(), read_ms, 0.0, dev_of(&st.base))).ok();
+    writeln!(out, "{}", listed_for_path(&st.base, st.listing.len(), read_ms, 0.0)).ok();
     // Rides along unasked, the same first-paint saving a list makes.
     write_window(out, st, 0, first, tb);
     out.flush().ok();

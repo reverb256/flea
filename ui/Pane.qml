@@ -57,6 +57,9 @@ FocusScope {
     property real searchMs: 0
     property bool listInFlight: false
     property bool listedSeen: false
+    // The listing directory's filesystem supports the freedesktop trash spec.
+    // Remote, pseudo, container and unspecified fuse filesystems do not.
+    property bool canTrash: true
     readonly property bool menuVisible: menu.opened
     // The keyboard-highlighted menu row, so a test can drive the menu without OCR.
     readonly property int menuCursor: menu.cursor
@@ -575,6 +578,7 @@ FocusScope {
         focusOwner: root.listArea
         showHidden: root.showHidden
         providersRefreshing: menuActions.providersRefreshing
+        canTrash: root.backend.canTrash
         taildropPeers: (root.cursorRow && !root.cursorRow.d) ? wire.taildrop.peers : []
         taildropInstalled: !root.backend.providers.taildrop || root.backend.providers.taildrop.installed !== false
         taildropReason: root.cursorRow && root.cursorRow.d ? "Taildrop sends files only" : wire.taildrop.reason

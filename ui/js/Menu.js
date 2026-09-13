@@ -146,6 +146,9 @@ function availableEntry(e, p, kind) {
     }
     if (e.action === "restoreAll" || e.action === "emptyTrash") e.disabled = !(p.trashTotal > 0) || p.busy === true
     if (["trash", "deletePermanently", "emptyTrash"].indexOf(e.action) >= 0) e.danger = true
+    // The trash entry is disabled when the listing directory's filesystem does not support
+    // the freedesktop trash spec (remote, pseudo, container, unspecified fuse).
+    if (e.action === "trash") e.disabled = e.disabled || p.canTrash === false
     return true
 }
 

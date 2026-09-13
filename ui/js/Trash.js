@@ -13,6 +13,12 @@ var ARM_MS = 1500
 // ui/js/Focus.js clears pane.trashArmedAt for every other action, so an arm never survives the key
 // after it; this reads the stamp before it writes one, which is what makes the second press the pair.
 function arm(pane) {
+    // The listing directory's filesystem does not support the freedesktop trash spec,
+    // so refuse before the work starts.
+    if (pane.canTrash === false) {
+        pane.message("This location has no Trash; use Delete permanently instead.", false)
+        return
+    }
     if (pane.trashArmedAt > 0 && Date.now() - pane.trashArmedAt < ARM_MS) {
         pane.trashArmedAt = 0
         Ops.trash(pane)

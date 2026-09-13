@@ -34,6 +34,7 @@ Item {
     property bool rowIsImage: false
     property int rowMode: 0
     property int selectionCount: 0
+    property bool canTrash: true
     // OpenWith.html's flyout rows, filled by ui/PaneMenuActions.qml when the registry answers.
     property var openWithApps: []
     property bool openWithLoaded: false
@@ -136,6 +137,7 @@ Item {
             openWithLoaded: root.openWithLoaded,
             rowMode: root.rowMode,
             selectionCount: root.selectionCount,
+            canTrash: root.canTrash,
             // The Menus settings section's stored set; ui/js/Menu.js applyHidden is what reads it.
             hiddenActions: ViewState.menuHidden
         })

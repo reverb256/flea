@@ -171,10 +171,15 @@ pub fn located_many_line(directory: &str, id: usize, transfer_id: usize, matches
         escape(directory), id, transfer_id, matches.join(","), error.is_none(), escape(error.unwrap_or_default()))
 }
 
-pub fn listed_line(n: usize, read_ms: f64, sort_ms: f64, dev: u64) -> String {
+// Convenience: build a listed line for a path, computing both dev and trash support.
+pub fn listed_for_path(path: &Path, n: usize, read_ms: f64, sort_ms: f64) -> String {
+    listed_line(n, read_ms, sort_ms, dev_of(path), trashable(path))
+}
+
+pub fn listed_line(n: usize, read_ms: f64, sort_ms: f64, dev: u64, can_trash: bool) -> String {
     format!(
-        r#"{{"t":"listed","n":{},"read":{:.3},"sort":{:.3},"v":{}}}"#,
-        n, read_ms, sort_ms, dev
+        r#"{{"t":"listed","n":{},"read":{:.3},"sort":{:.3},"v":{},"h":{}}}"#,
+        n, read_ms, sort_ms, dev, can_trash
     )
 }
 
@@ -361,8 +366,8 @@ mod tests {
 
     #[test]
     fn emits_a_listed_line() {
-        let s = listed_line(100000, 26.4, 2.5, 56);
-        assert_eq!(s, r#"{"t":"listed","n":100000,"read":26.400,"sort":2.500,"v":56}"#);
+        let s = listed_line(100000, 26.4, 2.5, 56, true);
+        assert_eq!(s, r#"{"t":"listed","n":100000,"read":26.400,"sort":2.500,"v":56,"h":true}"#);
     }
 
     #[test]

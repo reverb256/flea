@@ -5,10 +5,13 @@ import QtQuick
 Item {
     id: root
 
-    signal listed(int total, real readMs, real sortMs)
+    signal listed(int total, real readMs, real sortMs, bool canTrash)
     // The listing directory's filesystem, straight off the listed line: a drag compares it against
     // the dropped-on folder's own to tell a move within one volume from a copy across two.
     property var dirDev: 0
+    // The listing directory's filesystem supports the freedesktop trash spec (local rename into .Trash-<uid>).
+    // Remote, pseudo, container and unspecified fuse filesystems do not. Stays true until the next listed line.
+    property bool canTrash: true
     signal rows(int start, var items, real ms, var kinds)
     property real firstRowsAt: 0
     onRows: function(start, items, ms, kinds) {
@@ -306,7 +309,8 @@ Item {
         }
         if (message.t === "listed") {
             root.dirDev = message.v || 0
-            root.listed(message.n, message.read, message.sort)
+            root.canTrash = message.h === true
+            root.listed(message.n, message.read, message.sort, message.h === true)
         } else if (message.t === "rows") {
             root.rows(message.start, message.rows, message.ms, message.kinds || [])
         } else if (message.t === "error") {

@@ -146,7 +146,8 @@ Item {
     Connections {
         target: pane.backend
 
-        function onListed(total, readMs, sortMs) {
+        function onListed(total, readMs, sortMs, canTrash) {
+            pane.canTrash = canTrash
             if (!pane.dualMode && !pane.listInFlight && pane.searchMode.length === 0) {
                 ViewState.changeLeaf("sort", { key: pane.backend.sortBy === "mtime" ? "date" : pane.backend.sortBy,
                                              reverse: pane.backend.sortDesc })

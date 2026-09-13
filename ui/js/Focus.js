@@ -114,7 +114,14 @@ function act(action, root, menuId, paths) {
     case "reveal": Search.reveal(root); return
     // The write operations; every one of them is reversible with undo, so none of them confirms.
     case "duplicate": Ops.duplicate(root, menuId); return
-    case "trash": Ops.trash(root, menuId); return
+    case "trash":
+        // The listing directory's filesystem does not support the freedesktop trash spec
+        // (remote, pseudo, container, unspecified fuse), so refuse before the work starts.
+        if (root.canTrash === false) {
+            root.message("This location has no Trash; use Delete permanently instead.", false)
+            return
+        }
+        Ops.trash(root, menuId); return
     case "trashArm": Trash.arm(root); return
     case "copy": Ops.clip(root, false, paths); return
     case "copydirpath": root.copyDirPath(); return
